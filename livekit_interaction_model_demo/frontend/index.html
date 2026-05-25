@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LiveKit Interaction Runtime Demo</title>
+    <link rel="stylesheet" href="/styles.css?v=2" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Interaction Runtime</h1>
+          <p>LiveKit Agents · Gemini TTS · Shared Timeline</p>
+        </div>
+        <div class="status-pill" id="health">offline</div>
+      </header>
+
+      <section class="workspace">
+        <aside class="scenario-panel">
+          <h2>Scenarios</h2>
+          <div class="scenario-grid">
+            <button class="scenario-button" data-scenario="A">
+              <span>A</span>
+              <strong>用户插嘴</strong>
+            </button>
+            <button class="scenario-button" data-scenario="B">
+              <span>B</span>
+              <strong>主动纠错</strong>
+            </button>
+            <button class="scenario-button" data-scenario="C">
+              <span>C</span>
+              <strong>Backchannel</strong>
+            </button>
+            <button class="scenario-button" data-scenario="D">
+              <span>D</span>
+              <strong>后台结果</strong>
+            </button>
+          </div>
+        </aside>
+
+        <section class="timeline-panel">
+          <div class="panel-header">
+            <h2>Timeline</h2>
+            <span id="event-count">0 events</span>
+          </div>
+          <ol id="timeline" class="timeline"></ol>
+        </section>
+
+        <aside class="inspector-panel">
+          <section class="metric-strip">
+            <div>
+              <label>Floor</label>
+              <output id="floor-state">IDLE</output>
+            </div>
+            <div>
+              <label>Action</label>
+              <output id="action-state">LISTEN</output>
+            </div>
+          </section>
+
+          <section class="transcript-card">
+            <label>Latest transcript</label>
+            <p id="latest-transcript">等待场景运行。</p>
+          </section>
+
+          <section class="json-card">
+            <label>Sound plan</label>
+            <pre id="sound-plan">{}</pre>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/app.js?v=2"></script>
+  </body>
+</html>
