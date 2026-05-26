@@ -28,10 +28,25 @@ class Mock3DSoundProvider:
             "spatial": defaults[action],
         }
         if action is ActionType.BARGE_IN:
+            plan["priority"] = "high"
+            plan["sound"] = {
+                "name": "soft_interrupt_chime",
+                "asset": "mock://soft_interrupt_chime",
+                "gain_db": -10,
+                "start_offset_ms": 0,
+            }
             plan["mix"] = {"sidechain_user_mic": True, "attack_ms": 80, "release_ms": 320}
         elif action is ActionType.BACKCHANNEL:
+            plan["priority"] = "low"
+            plan["sound"] = {
+                "name": "low_priority_backchannel_presence",
+                "asset": "mock://subtle_presence",
+                "gain_db": -18,
+                "start_offset_ms": 0,
+            }
             plan["mix"] = {"sidechain_user_mic": False, "attack_ms": 10, "release_ms": 120}
         else:
+            plan["priority"] = "background"
+            plan["sound"] = {}
             plan["mix"] = {"sidechain_user_mic": False, "attack_ms": 40, "release_ms": 180}
         return plan
-

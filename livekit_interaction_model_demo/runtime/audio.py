@@ -29,9 +29,16 @@ class AudioRuntime:
         self._current_task: asyncio.Task[None] | None = None
         self._current_playback_id: str | None = None
         self._current_text = ""
+        self._current_action: ActionType | None = None
+        self._interrupt_reason = ""
 
     def is_speaking(self) -> bool:
         return bool(self._current_task and not self._current_task.done())
+
+    def current_action(self) -> str | None:
+        if not self.is_speaking() or self._current_action is None:
+            return None
+        return self._current_action.value
 
     async def speak(self, text: str, *, scene_context: dict[str, Any] | None = None) -> str:
         return await self._start_playback(ActionType.SHORT_REPLY, text, scene_context=scene_context)
@@ -55,6 +62,7 @@ class AudioRuntime:
             )
             return False
 
+        self._interrupt_reason = reason
         task.cancel()
         try:
             await task
@@ -88,6 +96,7 @@ class AudioRuntime:
         playback_id = uuid.uuid4().hex[:10]
         self._current_playback_id = playback_id
         self._current_text = text
+        self._current_action = action
 
         self.timeline.write_event(
             "sound_plan",
@@ -102,6 +111,23 @@ class AudioRuntime:
                 "action": action.value,
                 "text": text,
                 "status": "start",
+                "tts": {
+                    "provider": tts_result.provider,
+                    "voice": tts_result.voice,
+                    "mime_type": tts_result.mime_type,
+                    "sample_rate_hz": tts_result.sample_rate_hz,
+                    "mocked": tts_result.mocked,
+                    "bytes": len(tts_result.audio),
+                },
+            },
+        )
+        self.timeline.write_event(
+            "assistant_speech_started",
+            actor="assistant",
+            payload={
+                "playback_id": playback_id,
+                "action": action.value,
+                "text": text,
                 "tts": {
                     "provider": tts_result.provider,
                     "voice": tts_result.voice,
@@ -132,7 +158,18 @@ class AudioRuntime:
                     "duration_s": round(time.monotonic() - start, 3),
                 },
             )
+            self.timeline.write_event(
+                "assistant_speech_finished",
+                actor="assistant",
+                payload={
+                    "playback_id": playback_id,
+                    "action": action.value,
+                    "text": text,
+                    "duration_s": round(time.monotonic() - start, 3),
+                },
+            )
         except asyncio.CancelledError:
+            reason = self._interrupt_reason or "interrupted"
             self.timeline.write_event(
                 "assistant_speech",
                 actor="assistant",
@@ -141,6 +178,18 @@ class AudioRuntime:
                     "action": action.value,
                     "text": text,
                     "status": "cancelled",
+                    "reason": reason,
+                    "duration_s": round(time.monotonic() - start, 3),
+                },
+            )
+            self.timeline.write_event(
+                "assistant_speech_interrupted",
+                actor="assistant",
+                payload={
+                    "playback_id": playback_id,
+                    "action": action.value,
+                    "text": text,
+                    "reason": reason,
                     "duration_s": round(time.monotonic() - start, 3),
                 },
             )
@@ -150,4 +199,5 @@ class AudioRuntime:
                 self._current_task = None
                 self._current_playback_id = None
                 self._current_text = ""
-
+                self._current_action = None
+                self._interrupt_reason = ""

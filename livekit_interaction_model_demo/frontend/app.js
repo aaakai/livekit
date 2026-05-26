@@ -20,7 +20,8 @@ async function api(path, options = {}) {
 
 function eventClass(event) {
   if (event.event_type === "interrupt") return "interrupt";
-  if (event.event_type === "barge_in") return "barge";
+  if (event.event_type === "barge_in" || event.event_type === "assistant_barge_in") return "barge";
+  if (event.event_type === "assistant_speech_interrupted") return "interrupt";
   if (event.actor === "user") return "user";
   if (event.actor === "assistant") return "assistant";
   if (event.actor === "floor") return "floor";
@@ -30,6 +31,7 @@ function eventClass(event) {
 function eventSummary(event) {
   const payload = event.payload || {};
   if (payload.text) return payload.text;
+  if (payload.from && payload.to) return `${payload.from} -> ${payload.to}${payload.reason ? ` · ${payload.reason}` : ""}`;
   if (payload.action && typeof payload.action === "object") {
     const action = payload.action;
     return `${action.action || action.type}${action.reason ? ` · ${action.reason}` : ""}`;
